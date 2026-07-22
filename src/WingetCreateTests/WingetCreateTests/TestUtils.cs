@@ -98,6 +98,23 @@ namespace Microsoft.WingetCreateTests
         }
 
         /// <summary>
+        /// Sets the mock http response content along with a server-supplied Content-Disposition filename.
+        /// </summary>
+        /// <param name="installerName">File name of the installer.</param>
+        /// <param name="contentDispositionFileName">The filename value to advertise in the Content-Disposition header.</param>
+        public static void SetMockHttpResponseContent(string installerName, string contentDispositionFileName)
+        {
+            var content = new ByteArrayContent(File.ReadAllBytes(GetTestFile(installerName)));
+            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+            content.Headers.ContentDisposition = new ContentDispositionHeaderValue("attachment")
+            {
+                FileName = contentDispositionFileName,
+            };
+            httpResponseMessage.Content = content;
+            PackageParser.SetHttpMessageHandler(httpMessageHandler);
+        }
+
+        /// <summary>
         /// Obtains the relative filepath of the resources test data directory.
         /// </summary>
         /// <param name="fileName">File name of the test file.</param>
@@ -171,6 +188,23 @@ namespace Microsoft.WingetCreateTests
         }
 
         /// <summary>
+        /// Deletes existing copies of the specified resource (base and numbered variants) from the test resources directory.
+        /// </summary>
+        /// <param name="resourceName">Name of the resource file whose copies should be deleted.</param>
+        public static void DeleteResourceCopies(string resourceName)
+        {
+            string resourcePath = GetTestFile(resourceName);
+            string directory = Path.GetDirectoryName(resourcePath);
+            string fileName = Path.GetFileNameWithoutExtension(resourcePath);
+            string fileExt = Path.GetExtension(resourcePath);
+
+            foreach (string file in Directory.GetFiles(directory, fileName + "*" + fileExt))
+            {
+                File.Delete(file);
+            }
+        }
+
+        /// <summary>
         /// Adds files to an existing test zip archive.
         /// </summary>
         /// <param name="zipResourceName">Name of the zip resource file.</param>
@@ -211,9 +245,21 @@ namespace Microsoft.WingetCreateTests
         /// <param name="testFileNames">Name of the test files to delete.</param>
         public static void DeleteCachedFiles(List<string> testFileNames)
         {
+            string downloadDirectory = PackageParser.InstallerDownloadPath;
+            if (!Directory.Exists(downloadDirectory))
+            {
+                return;
+            }
+
             foreach (string fileName in testFileNames)
             {
-                File.Delete(Path.Combine(PackageParser.InstallerDownloadPath, fileName));
+                string baseName = Path.GetFileNameWithoutExtension(fileName);
+                string fileExt = Path.GetExtension(fileName);
+
+                foreach (string filePath in Directory.GetFiles(downloadDirectory, baseName + "*" + fileExt))
+                {
+                    File.Delete(filePath);
+                }
             }
         }
 
