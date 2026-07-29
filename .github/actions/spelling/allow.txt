@@ -14,6 +14,7 @@ appwiz
 appx
 arp
 aspnetcore
+autodetect
 bbwe
 checkbox
 checkboxes
@@ -61,13 +62,16 @@ msvc
 mubaidr
 NOLOGO
 NOLOGO
+noop
 nonexistentpackage
+NNN
 numpy
 NVM
 opencode
 opensource
 pkief
 powertoys
+PreIndexedPackage
 prerel
 pscustomobject
 psobject
@@ -84,6 +88,7 @@ todomvc
 tokio
 toolsai
 toolset
+toolsets
 UAC
 ubuntu
 uilt
