@@ -34,9 +34,13 @@ extends:
   parameters:
     globalSdl:
       tsa:
-        enabled: false
+        enabled: true
         configFile: $(Build.SourcesDirectory)\.config\tsaoptions.json
-        onboard: false
+        onboard: true
+      armory:
+        enabled: false
+      evidence:
+        enabled: false
 
     featureFlags:
       WindowsHostVersion:
@@ -141,6 +145,7 @@ extends:
             # Copies binary dependencies from VCLibs package to be included in standalone exe
             - task: PowerShell@2
               displayName: Download VCLibs package
+              retryCountOnTaskFailure: 3
               inputs:
                 targetType: 'inline'
                 script: |
@@ -166,6 +171,8 @@ extends:
                 workingDirectory: $(Build.SourcesDirectory)
                 performMultiLevelLookup: true
 
+            - task: NuGetAuthenticate@1
+
             - task: DotNetCoreCLI@2
               displayName: Restore
               inputs:
@@ -173,6 +180,7 @@ extends:
                 feedsToUse: config
                 nugetConfigPath: "nuget.config"
                 projects: $(workingDirectory)/**/*.csproj
+                arguments: --runtime win-x64
 
             - task: DotNetCoreCLI@2
               displayName: Build standalone, framework-dependent exe
@@ -181,7 +189,7 @@ extends:
                 publishWebProjects: false
                 zipAfterPublish: false
                 projects: $(workingDirectory)/**/WingetCreateCLI.csproj
-                arguments: "--configuration Release --runtime=win-x64 --output $(exeDirFrameworkDependent) -p:DebugType=None -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=false"
+                arguments: "--configuration Release --runtime=win-x64 --no-restore --output $(exeDirFrameworkDependent) -p:DebugType=None -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --self-contained=false"
 
             - task: MSBuild@1
               displayName: Build Solution
